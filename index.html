@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <title>Compliance Parser</title>
+</head>
+<body>
+    <input type = "file" id = "inpFile">
+    <button type = "button"  id = "btnUpload"> Upload </button> 
+
+    <br>
+    <br>
+    <textarea id ="resultText" placeholder="PDF text will appear here"  style="width: 300px; height: 400px;"> </textarea>
+    <br>
+    <br>
+    <button type = "button" id = "jparse">Parse Text to Json</button>
+
+    <table align = "center" id="table" border="1">
+    </table>
+
+    <script>
+        const inpFile = document.getElementById("inpFile");
+        const btnUpload = document.getElementById("btnUpload");
+        const resultText= document.getElementById("resultText");
+        const jparse = document.getElementById('jparse');
+
+        var table = document.getElementById('table');
+
+        btnUpload.addEventListener("click", () =>{
+            const formData = new FormData();
+            formData.append("pdfFile", inpFile.files[0]);
+
+            fetch("/extract-text", {
+                method: "post",//send data to server
+                body: formData //the body is a FormData object with a file Upload
+
+            }).then(response =>{ //receive response as text
+                return response.text();
+
+            }).then(extractedText =>{ //display extracted Text in Box
+                console.log(extractedText);     
+                resultText.value = "Text saved in test.txt";
+            });
+
+
+        });
+
+        jparse.addEventListener("click", ()=>{
+            const formData1 = new FormData();
+            fetch("/parse-json")
+            .then(response =>{
+                //console.log(response);
+                return response.json();
+            }).then(extractedData => {
+                //console.log(extractedData);
+                let list = extractedData;
+               // console.log(list);
+                createTable(list);
+            })
+
+        })
+        function createTable(list){
+            list= JSON.parse(list);
+            var cols =[];
+            for (var i = 0; i< list.length; i++){
+                for(var k in list[i]){
+                    if(cols.indexOf(k)=== -1){
+                        console.log(k);
+                        cols.push(k);
+                    }
+
+                }
+            }
+            var table = document.createElement('table');
+            var tr = table.insertRow(-1);
+
+            for(var i = 0; i<cols.length; i++){
+                
+                var titleheader = document.createElement('th');
+                titleheader.innerHTML = cols[i];
+
+                tr.appendChild(titleheader);
+            }
+            for(var i = 0; i<list.length; i++){
+                tablerow = table.insertRow(-1);
+                for(var j = 0; j<cols.length;j++){
+                    var cell = tablerow.insertCell(-1);
+                    cell.innerHTML = list[i][cols[j]];
+                }
+            }
+
+            var tabled = document.getElementById("table");
+            tabled.innerHTML = "";
+            tabled.appendChild(table);
+
+        }   
+
+
+
+    </script>
+</body>
+</html>
